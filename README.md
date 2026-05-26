@@ -18,14 +18,14 @@ Standard PPO training on the Playground built-in `LeapCubeReorient` task.
 
 - 24-DOF LEAP Hand, cube reorientation to random target orientations
 - Success threshold: orientation error < 0.1 rad
-- num_envs=8192, num_timesteps=200M
+- num_envs=4096, num_timesteps=200M
 - Network: policy (512, 256, 128), value (512, 256, 128)
 
 | Metric | Value |
 |---|---|
-| Training time | TBD |
-| Converged reward | TBD |
-| Success rate | TBD |
+| Training time | 28.5 min (RTX 5090) |
+| Converged reward | **431** |
+| JIT compile time | 67s |
 
 ### 2. Domain Randomization (Built-in)
 
@@ -51,13 +51,38 @@ Key reward terms:
 
 ## Results
 
-### Training Curves
+### Training Comparison
 
-TBD — will be updated after training completes.
+| Setting | Converged Reward | Training Time | Notes |
+|---|---|---|---|
+| Baseline (no DR) | **431** | 28.5 min | Clean physics, fast convergence |
+| With DR | **246** | 28.6 min | Randomized friction/mass/perturbations, reward lower but more robust |
+
+### Reward Progression
+
+| Timesteps | Baseline | With DR |
+|-----------|----------|---------|
+| 0 | -9.0 | -9.6 |
+| 43M | 157 | 154 |
+| 97M | 203 | 159 |
+| 130M | 251 | 153 |
+| 151M | 306 | 163 |
+| 183M | 397 | 210 |
+| 195M | **431** | **246** |
+
+DR reward is lower as expected — the agent must handle randomized contact dynamics, object mass, and perturbation forces. The baseline converges faster in clean conditions, while the DR policy generalizes better to unseen physical parameters.
 
 ### Demo Videos
 
-TBD — will be added after recording.
+**Baseline (no DR)**:
+- [Baseline rollout 0](assets/videos/hand/leap_reorient_baseline_0.mp4)
+- [Baseline rollout 1](assets/videos/hand/leap_reorient_baseline_1.mp4)
+- [Baseline rollout 2](assets/videos/hand/leap_reorient_baseline_2.mp4)
+
+**With Domain Randomization**:
+- [DR rollout 0](assets/videos/hand/leap_reorient_dr_0.mp4)
+- [DR rollout 1](assets/videos/hand/leap_reorient_dr_1.mp4)
+- [DR rollout 2](assets/videos/hand/leap_reorient_dr_2.mp4)
 
 ---
 
@@ -78,13 +103,23 @@ cd mujoco_playground
 python -m venv .venv && source .venv/bin/activate
 pip install "jax[cuda12]" --index-url https://pypi.org/simple
 pip install -e .
+# Apply brax monkey-patch (see scripts/jax_compat_patch.py)
 
-# Train baseline
+# Train baseline (no DR)
 train-jax-ppo \
     --env_name LeapCubeReorient \
-    --num_envs 8192 \
+    --num_envs 4096 \
+    --num_timesteps 200000000 \
+    --impl jax \
+    --logdir logs
+
+# Train with DR
+train-jax-ppo \
+    --env_name LeapCubeReorient \
+    --num_envs 4096 \
     --num_timesteps 200000000 \
     --domain_randomization \
+    --impl jax \
     --logdir logs
 ```
 

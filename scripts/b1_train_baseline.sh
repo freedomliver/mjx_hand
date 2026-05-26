@@ -37,6 +37,7 @@ train-jax-ppo \
   --num_envs "$NUM_ENVS" \
   --num_timesteps "$NUM_TIMESTEPS" \
   --seed "$SEED" \
+  --impl jax \
   --logdir "$LOGDIR" \
   --num_videos 3 \
   $DR_FLAG \

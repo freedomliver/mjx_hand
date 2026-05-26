@@ -80,12 +80,28 @@ ERROR: No matching distribution found for jax-cuda12-plugin
 pip install "jax[cuda12]" --index-url https://pypi.org/simple
 ```
 
+### Issue 7: warp-lang 1.13.0 breaks mujoco-mjx warp backend
+
+**Error**: Domain randomization fails with warp backend
+```
+AttributeError: module 'warp.types' has no attribute 'warp_type_to_np_dtype'
+```
+
+**Root Cause**: warp-lang 1.13.0 removed `warp_type_to_np_dtype` from public API, but mujoco-mjx 3.8.1 still uses it.
+
+**Solution**: Downgrade warp-lang
+```bash
+pip install "warp-lang==1.11.0"
+```
+Note: Use `--impl jax` flag for training if warp is not needed.
+
 ## Package Installation
 
 Installed via venv + pip (all from PyPI, not Aliyun mirror):
 - JAX 0.10.1 with cuda12 plugin + pjrt
 - jaxlib 0.10.1
 - brax 0.14.2 (with monkey-patch for JAX 0.10 compat)
+- warp-lang 1.11.0 (downgraded for mujoco-mjx compat)
 - MuJoCo 3.8.1 + MuJoCo MJX 3.8.1
 - mujoco_playground 0.2.0 from source: `pip install -e .`
 - wandb, tensorboardX, mediapy
